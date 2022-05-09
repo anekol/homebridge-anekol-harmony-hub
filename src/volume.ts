@@ -94,7 +94,7 @@ export class AnekolHarmonyHubVolumeHelper {
 
 		// turn off after awhile
 		this.off = new Date().getTime() + VOLUME_TURNOFF_DELAY
-		setTimeout((accessory, service) => {
+		setTimeout((service) => {
 			const now = new Date().getTime()
 			this.log.debug('Set Volume On: schedule off: ' + this.off + " now: " + now)
 			if (this.off < now)

@@ -1,6 +1,6 @@
 // class to provide a Harmony Hub accessory helper
 
-import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, Logger, PlatformAccessory, Service } from "homebridge";
+import { CharacteristicChange, CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, Logger, PlatformAccessory, Service } from "homebridge";
 import { AnekolHarmonyApi } from "./harmony_api";
 import { AnekolHarmonyHub, Activity, Hub } from "./index"
 
@@ -54,9 +54,8 @@ export class AnekolHarmonyHubHelper {
 
 		// set default activity
 		const active = this.find_active_activity(service)
-		if (active) {
+		if (active)
 			service.setCharacteristic(this.hap.Characteristic.ActiveIdentifier, parseInt(active.subtype as string))
-		}
 
 		// configure event handlers
 		service.getCharacteristic(this.hap.Characteristic.Active)
@@ -146,9 +145,8 @@ export class AnekolHarmonyHubHelper {
 	// get active identifier
 	private getActiveIdentifier(hub_slug: string, callback: CharacteristicGetCallback) {
 		this.status(hub_slug).then(status => {
-			const value = status.current_activity.id
-			// if hub is off current activity id is reported as -1
-			callback(NO_ERRORS, value < 0 ? 0 : value)
+			this.log.debug('Get Active Identifier: ' + status.current_activity);
+			callback(NO_ERRORS, status.current_activity.id);
 		})
 	}
 
@@ -157,7 +155,6 @@ export class AnekolHarmonyHubHelper {
 		this.log.debug('Set Active Activity: ' + value);
 		const is = this.find_activity_by_id(service, value as number)
 		if (is) {
-			this.log.info("IS: active:" + JSON.stringify(is))
 			this.harmony_api.post(hub_slug + "/activities/" + is.name)
 			this.state_change_started = new Date().getTime()
 			callback(NO_ERRORS)

@@ -1,6 +1,6 @@
-~/.homebridge/accessories/cachedAccessories is used to persist the accessories for dynamic platform plugins.
+Oh, my bad, ~/.homebridge/accessories/cachedAccessories is used to persist the accessories for dynamic platform plugins.
 
-~/.homebridge/persists/IdentifierCache.xxxxxxxxxxxx.json is used to persist the mapping of (long) UUIDs to (short) AIDs (for accessories) and IIDs (for services and characteristics) used in the HAP protocol. If you run DEBUG=* homebridge -D, the HAP calls are logged, including the AIDs and IIDs.
+Indeed, ~/.homebridge/persists/IdentifierCache.xxxxxxxxxxxx.json is used to persist the mapping of (long) UUIDs to (short) AIDs (for accessories) and IIDs (for services and characteristics) used in the HAP protocol. If you run DEBUG=* homebridge -D, the HAP calls are logged, including the AIDs and IIDs.
 
 The AIDs are unique per homebridge installation (HomeKit bridge); the IIDs are unique within an accessory. Note that IID 1 is fixed for the Accessory Information service, and therefore not stored in the cache. You're supposed to see multiple lines per accessory UUID, e.g.:
 
