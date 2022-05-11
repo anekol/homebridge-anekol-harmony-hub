@@ -2,7 +2,7 @@
 
 import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, Logger, PlatformAccessory, Service } from "homebridge";
 import { AnekolHarmonyApi } from "./harmony_api"
-import { AnekolHarmonyHub, Device, Hub } from "./index"
+import { AnekolHarmonyHub, Hub } from "./index"
 
 const NO_ERRORS = null
 
@@ -22,16 +22,17 @@ export class AnekolHarmonyHubDevicesHelper {
 		this.log = this.platform.log
 
 		// configure the information service
-		this.accessory.getService(this.hap.Service.AccessoryInformation)!
-			.setCharacteristic(this.hap.Characteristic.Manufacturer, 'Anekol')
-			.setCharacteristic(this.hap.Characteristic.Model, 'HarmonyHub')
+		this.accessory.getService(this.hap.Service.AccessoryInformation) ||
+			this.accessory.addService(this.hap.Service.AccessoryInformation)
+				.setCharacteristic(this.hap.Characteristic.Manufacturer, 'Anekol')
+				.setCharacteristic(this.hap.Characteristic.Model, 'HarmonyHub')
 
 		// remove any existing device services
-		for (var s of accessory.services.filter(s => s.UUID == this.hap.Service.Switch.UUID))
+		for (const s of accessory.services.filter(s => s.UUID == this.hap.Service.Switch.UUID))
 			this.accessory.removeService(s)
 
 		// add device service if no config provided or if in config list
-		for (var device of this.hub.devices) {
+		for (const device of this.hub.devices) {
 			if (this.config_devices == null || config_devices == [] ||
 				config_devices.find(config_device => device.label == config_device)) {
 				this.log.info("Adding Device: " + device.label)

@@ -24,8 +24,7 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
   private harmony_api: AnekolHarmonyApi
   private host: string
   private hubs_config: HubConfig[]
-  private name: string
-  private port: string = "8282"
+  private port = "8282"
   private restored: PlatformAccessory[] = []
 
   constructor(
@@ -36,7 +35,6 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
     this.hap = api.hap
 
     // user config
-    this.name = config.name as string || PLATFORM_NAME
     this.host = config.host as string || "localhost"
     this.port = config.port as string || "8282"
     this.hubs_config = config.hubs as HubConfig[];
@@ -50,12 +48,12 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
       // configure the hub and it's accessories
       this.discover_hubs().then((hubs) => {
 
-        for (var hub of hubs) {
+        for (const hub of hubs) {
           const hub_config = this.config_for(hub.slug)
 
           // ignore discovered hubs that aren't present in the plugin config
           if (hub_config) {
-            var uuid, accessory
+            let uuid, accessory
             const hub_label = hub_config.label || ""
 
             // configure the main hub accessory
@@ -94,7 +92,7 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
         }
 
         // deregister any restored accessories not configured
-        for (var r of this.restored) {
+        for (const r of this.restored) {
           if (!this.configured.find(c => c.UUID === r.UUID)) {
             this.log.info("Deregister: not configured: " + r.displayName)
             this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [r])
@@ -106,20 +104,20 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
 
   // discover hub configurations
   private async discover_hubs() {
-    let discovered_hubs: Hub[] = []
+    const discovered_hubs: Hub[] = []
 
     // find hubs
-    let hd = await this.harmony_api.get("")
-    let hub_slugs = hd.hubs ? hd.hubs : []
+    const hd = await this.harmony_api.get("")
+    const hub_slugs = hd.hubs ? hd.hubs : []
 
-    for (var hub_slug of hub_slugs) {
+    for (const hub_slug of hub_slugs) {
 
       // find hub activities
-      let ad = await this.harmony_api.get(hub_slug + "/activities")
+      const ad = await this.harmony_api.get(hub_slug + "/activities")
       const activities: Activity[] = ad.activities ? ad.activities : []
 
       // find hub devices
-      let dd = await this.harmony_api.get(hub_slug + "/devices")
+      const dd = await this.harmony_api.get(hub_slug + "/devices")
       const devices: Device[] = dd.devices ? dd.devices : []
 
       discovered_hubs.push({ slug: hub_slug, activities: activities, devices: devices })

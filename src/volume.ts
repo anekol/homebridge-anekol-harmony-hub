@@ -13,7 +13,7 @@ const NO_ERRORS = null
 export class AnekolHarmonyHubVolumeHelper {
 	private hap: HAP
 	private log: Logger
-	private off: number = 0
+	private off = 0
 
 	// constructor
 	constructor(
@@ -26,12 +26,13 @@ export class AnekolHarmonyHubVolumeHelper {
 		this.log = this.platform.log
 
 		// configure the information service
-		accessory.getService(this.hap.Service.AccessoryInformation)!
-			.setCharacteristic(this.hap.Characteristic.Manufacturer, 'Anekol')
-			.setCharacteristic(this.hap.Characteristic.Model, 'HarmonyHub')
+		accessory.getService(this.hap.Service.AccessoryInformation) ||
+			accessory.addService(this.hap.Service.AccessoryInformation)
+				.setCharacteristic(this.hap.Characteristic.Manufacturer, 'Anekol')
+				.setCharacteristic(this.hap.Characteristic.Model, 'HarmonyHub')
 
 		// configure the lightbulb/volume service
-		let service = this.accessory.getService(this.hap.Service.Lightbulb) ||
+		const service = this.accessory.getService(this.hap.Service.Lightbulb) ||
 			this.accessory.addService(this.hap.Service.Lightbulb)
 		service.getCharacteristic(this.hap.Characteristic.On)
 			.on('get', this.getVolumeOn.bind(this))
@@ -63,15 +64,15 @@ export class AnekolHarmonyHubVolumeHelper {
 
 	// set volume
 	private async setVolume(hub_slug: string, service: Service, target_volume: CharacteristicValue, callback: CharacteristicSetCallback) {
-		let data = await this.harmony_api.get(hub_slug + "/status")
+		const data = await this.harmony_api.get(hub_slug + "/status")
 		if (!data.off) { // hub is turned on
 
 			// if value is 0 the lightbulb will be turned off, but on next "setOn true" a value of 100 will be called for
 			// in that case ignore the condition and wait for setOn to set a reasonable target
-			let volume = DEFAULT_VOLUME
-			let diff = target_volume as number - volume
-			let command = (0 < diff) ? "volume-up" : "volume-down"
-			let repeat = Math.abs(Math.round(diff / VOLUME_COMMAND_REPEAT_FACTOR))
+			const volume = DEFAULT_VOLUME
+			const diff = target_volume as number - volume
+			const command = (0 < diff) ? "volume-up" : "volume-down"
+			const repeat = Math.abs(Math.round(diff / VOLUME_COMMAND_REPEAT_FACTOR))
 			this.log.debug('Set Volume: target: ' + target_volume + " current: " + volume + " command: " + command + " repeat: " + repeat)
 			if (0 < repeat) {
 				this.harmony_api.post(hub_slug + "/commands/" + command, repeat)

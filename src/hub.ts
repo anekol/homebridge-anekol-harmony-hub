@@ -1,6 +1,7 @@
 // class to provide a Harmony Hub accessory helper
 
-import { CharacteristicChange, CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, Logger, PlatformAccessory, Service } from "homebridge";
+import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, Logger, PlatformAccessory, Service } from "homebridge";
+
 import { AnekolHarmonyApi } from "./harmony_api";
 import { AnekolHarmonyHub, Activity, Hub } from "./index"
 
@@ -12,7 +13,7 @@ const STATE_CHANGE_SETTLE_TIME_INTERVAL = 10000
 export class AnekolHarmonyHubHelper {
 	private hap: HAP
 	private log: Logger
-	private state_change_started: number = 0
+	private state_change_started = 0
 
 	// constructor
 	constructor(
@@ -25,28 +26,29 @@ export class AnekolHarmonyHubHelper {
 		this.log = this.platform.log
 
 		// configure the information service
-		accessory.getService(this.hap.Service.AccessoryInformation)!
-			.setCharacteristic(this.hap.Characteristic.Manufacturer, 'Anekol')
-			.setCharacteristic(this.hap.Characteristic.Model, 'HarmonyHub')
+		accessory.getService(this.hap.Service.AccessoryInformation) ||
+			accessory.addService(this.hap.Service.AccessoryInformation)
+				.setCharacteristic(this.hap.Characteristic.Manufacturer, 'Anekol')
+				.setCharacteristic(this.hap.Characteristic.Model, 'HarmonyHub')
 
 		// configure the tv service
-		const service = (this.accessory.getService(this.hap.Service.Television) ||
-			this.accessory.addService(this.hap.Service.Television))
+		const service = (accessory.getService(this.hap.Service.Television) ||
+			accessory.addService(this.hap.Service.Television))
 			.setCharacteristic(this.hap.Characteristic.SleepDiscoveryMode, this.hap.Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE)
 			.setCharacteristic(this.hap.Characteristic.PowerModeSelection, this.hap.Characteristic.PowerModeSelection.HIDE)
 			.setCharacteristic(this.hap.Characteristic.RemoteKey, this.hap.Characteristic.RemoteKey.PLAY_PAUSE)
 
 		// remove existing activity services
-		for (var s of accessory.services.filter(s => s.UUID == this.hap.Service.InputSource.UUID)) {
+		for (const s of accessory.services.filter(s => s.UUID == this.hap.Service.InputSource.UUID)) {
 			service.removeLinkedService(s)
 			accessory.removeService(s)
 		}
 
 		// add activity as input source service
-		for (var a of this.hub.activities) {
+		for (const a of this.hub.activities) {
 			if (a.isAVActivity) {
 				this.log.info("Adding Activity: " + a.label)
-				let is = this.new_input_source_service(a.label, a.id, a.slug)
+				const is = this.new_input_source_service(a.label, a.id, a.slug)
 				accessory.addService(is)
 				service.addLinkedService(is)
 			}
@@ -83,7 +85,7 @@ export class AnekolHarmonyHubHelper {
 
 	// find activity by id
 	private find_activity_by_id(service: Service, id: number) {
-		for (var is of service.linkedServices) {
+		for (const is of service.linkedServices) {
 			if (is.UUID == this.hap.Service.InputSource.UUID)
 				if (parseInt(is.subtype as string) == id)
 					return is
@@ -93,13 +95,13 @@ export class AnekolHarmonyHubHelper {
 
 	// find active activity
 	private find_active_activity(service: Service) {
-		let id = service.getCharacteristic(this.hap.Characteristic.ActiveIdentifier).value as number
+		const id = service.getCharacteristic(this.hap.Characteristic.ActiveIdentifier).value as number
 		if (id != 0) {
 			return this.find_activity_by_id(service, id)
 		} else
 
 			// not set - return first activity
-			for (var is of service.linkedServices) {
+			for (const is of service.linkedServices) {
 				if (is.UUID == this.hap.Service.InputSource.UUID) {
 					return is
 				}
@@ -109,7 +111,7 @@ export class AnekolHarmonyHubHelper {
 
 	// new input source service
 	private new_input_source_service(label: string, id: string, slug: string) {
-		let service = new this.hap.Service.InputSource(label, id)
+		const service = new this.hap.Service.InputSource(label, id)
 		service.name = slug
 		service.setCharacteristic(this.hap.Characteristic.Identifier, id)
 			.setCharacteristic(this.hap.Characteristic.ConfiguredName, label)
@@ -174,15 +176,15 @@ export class AnekolHarmonyHubHelper {
 	// start status polling
 	private startPolling(hub_slug: string, service: Service) {
 		this.log.info('Start status polling ...')
-		var emitter = pollingtoevent((poll: (error: any, service: Service, data: any) => void) => {
+		const emitter = pollingtoevent((poll: (error: unknown, service: Service, data: unknown) => void) => {
 			this.status(hub_slug).then(status => {
 				poll(null, service, status)
 			})
 		}, { interval: POLL_INTERVAL, eventName: service.iid })
 
 		emitter.on(service.iid, (service: Service, status: { off: boolean, current_activity: Activity }) => {
-			let now = new Date().getTime()
-			let limit = this.state_change_started + STATE_CHANGE_SETTLE_TIME_INTERVAL
+			const now = new Date().getTime()
+			const limit = this.state_change_started + STATE_CHANGE_SETTLE_TIME_INTERVAL
 
 			// update active state if active state change is not in progress or settle time has expired
 			if (this.state_change_started <= 0 || limit < now) {
@@ -213,7 +215,7 @@ export class AnekolHarmonyHubHelper {
 
 	// power on
 	private power_on(hub_slug: string, activity: CharacteristicValue) {
-		let command = hub_slug + "/activities/" + activity
+		const command = hub_slug + "/activities/" + activity
 		this.log.debug("power_on: command: " + command)
 		this.harmony_api.post(command)
 	}

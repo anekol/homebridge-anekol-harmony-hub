@@ -19,7 +19,7 @@ export class AnekolHarmonyApi {
     }
 
     // put
-    public async put(suffix: string, repeat: number = 1) {
+    public async put(suffix: string, repeat = 1) {
         let n = repeat
         while (0 < n) {
             await this._axios('put', suffix)
@@ -28,7 +28,7 @@ export class AnekolHarmonyApi {
     }
 
     //post
-    public async post(suffix: string, repeat: number = 1) {
+    public async post(suffix: string, repeat = 1) {
         let n = repeat
         while (0 < n) {
             await this._axios('post', suffix)
@@ -37,10 +37,10 @@ export class AnekolHarmonyApi {
     }
 
     async _axios(method: string, suffix: string) {
-        let url: string = 'http://' + this.host + ":" + this.port + "/hubs/" + suffix
+        const url: string = 'http://' + this.host + ":" + this.port + "/hubs/" + suffix
         try {
             this.log.debug("Axios: method: " + method + " url: " + url)
-            let resp = await this.axios({ method: method, url: url });
+            const resp = await this.axios({ method: method, url: url });
             return resp.data
         } catch (error) {
             this.log.error("HarmonyApi url: " + url + " : " + error);
