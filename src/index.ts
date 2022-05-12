@@ -26,6 +26,7 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
   private hubs_config: HubConfig[]
   private port = "8282"
   private restored: PlatformAccessory[] = []
+  private verboseLog = false
 
   constructor(
     public readonly log: Logger,
@@ -37,6 +38,7 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
     // user config
     this.host = config.host as string || "localhost"
     this.port = config.port as string || "8282"
+    this.verboseLog = config.verboseLog as boolean || false
     this.hubs_config = config.hubs as HubConfig[];
 
     this.harmony_api = new AnekolHarmonyApi(log, this.host, this.port)
@@ -63,8 +65,11 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
               accessory = new this.api.platformAccessory(hub_label, uuid, this.hap.Categories.TV_SET_TOP_BOX);
               this.api.publishExternalAccessories(PLUGIN_NAME, [accessory]);
               this.log.info('Added new accessory: ' + accessory.displayName);
+            } else {
+              if (this.verboseLog)
+                this.log.info('Restored: ' + accessory.displayName);
             }
-            new AnekolHarmonyHubHelper(this, accessory, this.harmony_api, hub)
+            new AnekolHarmonyHubHelper(this, accessory, this.harmony_api, hub, this.verboseLog)
             this.add_configured(accessory)
 
             // configure hub devices accessory
@@ -74,6 +79,9 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
               accessory = new this.api.platformAccessory(hub_label + " Devices", uuid, this.hap.Categories.SWITCH);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
               this.log.info('Added new accessory: ' + accessory.displayName);
+            } else {
+              if (this.verboseLog)
+                this.log.info('Restored: ' + accessory.displayName);
             }
             new AnekolHarmonyHubDevicesHelper(this, accessory, this.harmony_api, hub, hub_config.devices)
             this.add_configured(accessory)
@@ -85,8 +93,11 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
               accessory = new this.api.platformAccessory(hub_label + " Volume", uuid, this.hap.Categories.LIGHTBULB);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
               this.log.info('Added new accessory: ' + accessory.displayName);
+            } else {
+              if (this.verboseLog)
+                this.log.info('Restored: ' + accessory.displayName);
             }
-            new AnekolHarmonyHubVolumeHelper(this, accessory, this.harmony_api, hub)
+            new AnekolHarmonyHubVolumeHelper(this, accessory, this.harmony_api, hub, this.verboseLog)
             this.add_configured(accessory)
           }
         }

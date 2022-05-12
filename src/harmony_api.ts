@@ -36,7 +36,7 @@ export class AnekolHarmonyApi {
         }
     }
 
-    async _axios(method: string, suffix: string) {
+    private async _axios(method: string, suffix: string) {
         const url: string = 'http://' + this.host + ":" + this.port + "/hubs/" + suffix
         try {
             this.log.debug("Axios: method: " + method + " url: " + url)

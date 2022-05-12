@@ -3,7 +3,7 @@
 import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, Logger, PlatformAccessory, Service } from "homebridge";
 import { AnekolHarmonyApi } from "./harmony_api";
 import { AnekolHarmonyHub, Activity, Hub } from "./index"
-import { pollingtoevent } from "polling-to-event";
+import pollingtoevent from "polling-to-event";
 
 const NO_ERRORS = null
 const POLL_INTERVAL = 5000
@@ -20,6 +20,7 @@ export class AnekolHarmonyHubHelper {
 		private readonly accessory: PlatformAccessory,
 		private readonly harmony_api: AnekolHarmonyApi,
 		private readonly hub: Hub,
+		private readonly verboseLog: boolean
 	) {
 		this.hap = this.platform.api.hap
 		this.log = this.platform.log
@@ -81,7 +82,6 @@ export class AnekolHarmonyHubHelper {
 		this.platform.api.updatePlatformAccessories([accessory])
 	}
 
-
 	// find activity by id
 	private find_activity_by_id(service: Service, id: number) {
 		for (const is of service.linkedServices) {
@@ -123,14 +123,16 @@ export class AnekolHarmonyHubHelper {
 	// get active
 	private async getActive(hub_slug: string, callback: CharacteristicGetCallback) {
 		const active = (await this.status(hub_slug)).off ? 0 : 1
-		this.log.debug('Get Active: ' + active);
+		if (this.verboseLog)
+			this.log.info('Get Active: ' + active);
 		callback(NO_ERRORS, active);
 	}
 
 	// set active
 	private async setActive(hub_slug: string, service: Service, target_active: CharacteristicValue, callback: CharacteristicSetCallback) {
 		const active = (await this.status(hub_slug)).off ? 0 : 1
-		this.log.debug("Set Active: target active: " + target_active + " current active: " + active)
+		if (this.verboseLog)
+			this.log.info("Set Active: target active: " + target_active + " current active: " + active)
 		if (target_active != active) {
 			this.state_change_started = new Date().getTime()
 			if (target_active == 1) {
@@ -146,14 +148,16 @@ export class AnekolHarmonyHubHelper {
 	// get active identifier
 	private getActiveIdentifier(hub_slug: string, callback: CharacteristicGetCallback) {
 		this.status(hub_slug).then(status => {
-			this.log.debug('Get Active Identifier: ' + status.current_activity);
+			if (this.verboseLog)
+				this.log.info('Get Active Identifier: ' + status.current_activity);
 			callback(NO_ERRORS, status.current_activity.id);
 		})
 	}
 
 	// set active identifier
 	private setActiveIdentifier(hub_slug: string, service: Service, value: CharacteristicValue, callback: CharacteristicSetCallback) {
-		this.log.debug('Set Active Activity: ' + value);
+		if (this.verboseLog)
+			this.log.info('Set Active Activity: ' + value);
 		const is = this.find_activity_by_id(service, value as number)
 		if (is) {
 			this.harmony_api.post(hub_slug + "/activities/" + is.name)
@@ -188,34 +192,42 @@ export class AnekolHarmonyHubHelper {
 			// update active state if active state change is not in progress or settle time has expired
 			if (this.state_change_started <= 0 || limit < now) {
 				this.state_change_started = 0
-				this.log.debug("Poll: status: " + JSON.stringify(status))
+				if (this.verboseLog)
+					this.log.info("Poll: status: " + JSON.stringify(status))
 
 				const active = service.getCharacteristic(this.hap.Characteristic.Active).value;
 				const target_active = status.off ? 0 : 1
 
 				if (active != target_active) {
-					this.log.debug("Poll: change active to: " + target_active)
+					if (this.verboseLog)
+						this.log.info("Poll: change active to: " + target_active)
 					service.updateCharacteristic(this.hap.Characteristic.Active, target_active)
 					if (target_active == 1) {
-						this.log.debug("Poll: change activity to: " + status.current_activity.id)
+						if (this.verboseLog)
+							this.log.info("Poll: change activity to: " + status.current_activity.id)
 						service.updateCharacteristic(this.hap.Characteristic.ActiveIdentifier, status.current_activity.id);
 					}
 				}
 			} else {
-				this.log.debug("Poll: state change in progress - no update")
+				if (this.verboseLog)
+					this.log.info("Poll: state change in progress - no update")
 			}
 		});
 	}
 
 	// power off
 	private power_off(hub_slug: string) {
-		this.harmony_api.put(hub_slug + "/off")
+		const command = hub_slug + "/off"
+		if (this.verboseLog)
+			this.log.info("power_off: command: " + command)
+		this.harmony_api.put(command)
 	}
 
 	// power on
 	private power_on(hub_slug: string, activity: CharacteristicValue) {
 		const command = hub_slug + "/activities/" + activity
-		this.log.debug("power_on: command: " + command)
+		if (this.verboseLog)
+			this.log.info("power_on: command: " + command)
 		this.harmony_api.post(command)
 	}
 
