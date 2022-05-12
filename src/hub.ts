@@ -1,11 +1,10 @@
 // class to provide a Harmony Hub accessory helper
 
 import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, Logger, PlatformAccessory, Service } from "homebridge";
-
 import { AnekolHarmonyApi } from "./harmony_api";
 import { AnekolHarmonyHub, Activity, Hub } from "./index"
+import { pollingtoevent } from "polling-to-event";
 
-const pollingtoevent = require("polling-to-event");
 const NO_ERRORS = null
 const POLL_INTERVAL = 5000
 const STATE_CHANGE_SETTLE_TIME_INTERVAL = 10000

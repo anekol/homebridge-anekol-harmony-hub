@@ -10,9 +10,10 @@
   "main": "dist/index.js",
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=0",
-    "prepare": "rimraf ./dist && tsc",
+    "prepare": "npm run lint && rimraf ./dist && tsc",
     "prepublishOnly": "npm run prepare"
   },
+  "types": "index.d.ts",
   "keywords": [
     "homebridge-plugin"
   ],
