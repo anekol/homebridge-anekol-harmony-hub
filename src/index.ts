@@ -103,21 +103,23 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
             this.add_configured(accessory)
           }
         }
-      })
 
-      // deregister any restored accessories not configured
-      for (const r of this.restored) {
-        this.log.warn("Restored: " + r.displayName)
-        if (!this.configured.find(c => c.UUID === r.UUID)) {
-          this.log.info("Deregister: not configured: " + r.displayName)
-          this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [r])
+        // deregister any restored accessories not configured
+        for (const r of this.restored) {
+          if (this.verboseLog)
+            this.log.info("Restored: " + r.displayName)
+          if (!this.configured.find(c => c.UUID === r.UUID)) {
+            this.log.info("Deregister: not configured: " + r.displayName)
+            this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [r])
+          }
         }
-      }
 
-      for (const c of this.configured) {
-        this.log.warn("Configured: " + c.displayName)
+        for (const c of this.configured) {
+          if (this.verboseLog)
+            this.log.info("Configured: " + c.displayName)
 
-      }
+        }
+      })
     })
   }
 
@@ -171,7 +173,7 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
 
   // configureAccessory will be called once for every cached accessory restored
   public configureAccessory(accessory: PlatformAccessory) {
-    this.log.warn("Restored: " + accessory.displayName)
+    this.log.info("Restored: " + accessory.displayName)
     this.restored.push(accessory)
   }
 
