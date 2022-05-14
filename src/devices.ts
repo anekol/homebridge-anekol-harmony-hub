@@ -1,10 +1,9 @@
 // class to provide a Harmony Hub devices accessory helper
 
-import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, Logger, PlatformAccessory, Service } from "homebridge";
+import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, HAPStatus, Logger, PlatformAccessory, Service } from "homebridge";
 import { AnekolHarmonyApi } from "./harmony_api"
 import { AnekolHarmonyHub, Hub } from "./index"
 
-const NO_ERRORS = null
 
 export class AnekolHarmonyHubDevicesHelper {
 	private hap: HAP
@@ -16,7 +15,8 @@ export class AnekolHarmonyHubDevicesHelper {
 		private readonly accessory: PlatformAccessory,
 		private readonly harmony_api: AnekolHarmonyApi,
 		private readonly hub: Hub,
-		private readonly config_devices: string[]
+		private readonly config_devices: string[],
+		private readonly verboseLog: boolean
 	) {
 		this.hap = this.platform.api.hap
 		this.log = this.platform.log
@@ -35,21 +35,29 @@ export class AnekolHarmonyHubDevicesHelper {
 		for (const device of this.hub.devices) {
 			if (this.config_devices == null || config_devices == [] ||
 				config_devices.find(config_device => device.label == config_device)) {
-				this.log.info("Adding Device: " + device.label)
-				const service = new this.hap.Service.Switch(device.label, device.slug);
-				service.getCharacteristic(this.hap.Characteristic.On)
-					.on('get', this.getOn.bind(this, this.hub.slug))
-					.on('set', this.setOn.bind(this, this.hub.slug, service))
-				accessory.addService(service)
+
+				if (!hub.power_on.includes(device.slug) || !hub.power_off.includes(device.slug)) {
+					this.log.warn("Adding Device: " + device.label)
+					const service = new this.hap.Service.Switch(device.label, device.slug);
+					service.getCharacteristic(this.hap.Characteristic.On)
+						.on('get', this.getOn.bind(this, this.hub.slug))
+						.on('set', this.setOn.bind(this, this.hub.slug, service))
+					this.accessory.addService(service)
+					this.platform.api.updatePlatformAccessories([this.accessory])
+				} else {
+					this.log.warn("NOT Adding Device: " + device.label)
+				}
 			}
 		}
 		this.platform.api.updatePlatformAccessories([accessory])
 	}
 
+
+
 	// get on 
 	private getOn(device_slug: string, callback: CharacteristicGetCallback) {
 		this.log.debug('Get On: ' + device_slug);
-		callback(NO_ERRORS, false); ``
+		callback(HAPStatus.SUCCESS, false); ``
 	}
 
 	// set on
@@ -61,6 +69,6 @@ export class AnekolHarmonyHubDevicesHelper {
 		setTimeout((service) => {
 			service.updateCharacteristic(this.hap.Characteristic.On, false);
 		}, 500, service);
-		callback(NO_ERRORS);
+		callback(HAPStatus.SUCCESS);
 	}
 }

@@ -1,11 +1,9 @@
 // class to provide a Harmony Hub accessory helper
 
-import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, Logger, PlatformAccessory, Service } from "homebridge";
+import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, HAPStatus, Logger, PlatformAccessory, Service } from "homebridge";
 import { AnekolHarmonyApi } from "./harmony_api";
-import { AnekolHarmonyHub, Activity, Hub } from "./index"
-import pollingtoevent from "polling-to-event";
+import { AnekolHarmonyHub, Hub } from "./index"
 
-const NO_ERRORS = null
 const POLL_INTERVAL = 5000
 const STATE_CHANGE_SETTLE_TIME_INTERVAL = 10000
 
@@ -62,22 +60,13 @@ export class AnekolHarmonyHubHelper {
 		// configure event handlers
 		service.getCharacteristic(this.hap.Characteristic.Active)
 			.on('get', this.getActive.bind(this, this.hub.slug))
-			.on('set', this.setActive.bind(this, this.hub.slug, service))
+			.on('set', this.setActive.bind(this, this.hub, service))
 		service.getCharacteristic(this.hap.Characteristic.ActiveIdentifier)
 			.on('get', this.getActiveIdentifier.bind(this, this.hub.slug))
 			.on('set', this.setActiveIdentifier.bind(this, this.hub.slug, service))
 
 		// start polling the tv service
 		this.startPolling(this.hub.slug, service)
-
-		// configure the tv speaker service
-		// this.log.info("Add TVS")
-		// const tvs = (this.accessory.getService(this.hap.Service.TelevisionSpeaker) ||
-		// 	this.accessory.addService(this.hap.Service.TelevisionSpeaker))
-		// tvs.getCharacteristic(this.hap.Characteristic.Mute)
-		// 	.on('get', this.getMute.bind(this))
-		// 	.on('set', this.setMute.bind(this))
-		// 	this.log.info("Added TVS: "+tvs.displayName)
 
 		this.platform.api.updatePlatformAccessories([accessory])
 	}
@@ -122,35 +111,36 @@ export class AnekolHarmonyHubHelper {
 
 	// get active
 	private async getActive(hub_slug: string, callback: CharacteristicGetCallback) {
-		const active = (await this.status(hub_slug)).off ? 0 : 1
+		const active = (await this.status(hub_slug)).off ? this.hap.Characteristic.Active.INACTIVE : this.hap.Characteristic.Active.ACTIVE
 		if (this.verboseLog)
 			this.log.info('Get Active: ' + active);
-		callback(NO_ERRORS, active);
+		callback(HAPStatus.SUCCESS, active);
 	}
 
 	// set active
-	private async setActive(hub_slug: string, service: Service, target_active: CharacteristicValue, callback: CharacteristicSetCallback) {
-		const active = (await this.status(hub_slug)).off ? 0 : 1
+	private async setActive(hub: Hub, service: Service, target_active: CharacteristicValue, callback: CharacteristicSetCallback) {
+		const active = (await this.status(hub.slug)).off ? this.hap.Characteristic.Active.INACTIVE : this.hap.Characteristic.Active.ACTIVE
 		if (this.verboseLog)
 			this.log.info("Set Active: target active: " + target_active + " current active: " + active)
 		if (target_active != active) {
 			this.state_change_started = new Date().getTime()
-			if (target_active == 1) {
+			if (target_active == this.hap.Characteristic.Active.ACTIVE) {
 				const is = this.find_active_activity(service)
-				if (is) this.power_on(hub_slug, is.name as string)
+				if (is) this.power_on(hub, is.name as string)
 			} else {
-				this.power_off(hub_slug)
+				this.power_off(hub)
 			}
 		}
-		callback(NO_ERRORS);
+		callback(HAPStatus.SUCCESS);
 	}
 
 	// get active identifier
 	private getActiveIdentifier(hub_slug: string, callback: CharacteristicGetCallback) {
 		this.status(hub_slug).then(status => {
+			const ca_id = status.off ? 0 : status.current_activity.id
 			if (this.verboseLog)
-				this.log.info('Get Active Identifier: ' + status.current_activity);
-			callback(NO_ERRORS, status.current_activity.id);
+				this.log.info('Get Active Identifier: ' + ca_id);
+			callback(HAPStatus.SUCCESS, ca_id);
 		})
 	}
 
@@ -162,47 +152,31 @@ export class AnekolHarmonyHubHelper {
 		if (is) {
 			this.harmony_api.post(hub_slug + "/activities/" + is.name)
 			this.state_change_started = new Date().getTime()
-			callback(NO_ERRORS)
+			callback(HAPStatus.SUCCESS)
 		} else { callback(new Error("Activity not found: value: " + value)) }
 	}
 
-	// get mute
-	private getMute(callback: CharacteristicGetCallback) {
-		callback(NO_ERRORS, false);
-	}
-
-	// get mute
-	private setMute(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-		callback(NO_ERRORS);
-	}
-
-	// start status polling
-	private startPolling(hub_slug: string, service: Service) {
-		this.log.info('Start status polling ...')
-		const emitter = pollingtoevent((poll: (error: unknown, service: Service, data: unknown) => void) => {
-			this.status(hub_slug).then(status => {
-				poll(null, service, status)
-			})
-		}, { interval: POLL_INTERVAL, eventName: service.iid })
-
-		emitter.on(service.iid, (service: Service, status: { off: boolean, current_activity: Activity }) => {
+	private startPolling(slug: string, service: Service) {
+		setInterval(async (slug: string, service: Service) => {
 			const now = new Date().getTime()
 			const limit = this.state_change_started + STATE_CHANGE_SETTLE_TIME_INTERVAL
 
 			// update active state if active state change is not in progress or settle time has expired
 			if (this.state_change_started <= 0 || limit < now) {
 				this.state_change_started = 0
+
+				const status = await this.status(slug)
 				if (this.verboseLog)
 					this.log.info("Poll: status: " + JSON.stringify(status))
 
 				const active = service.getCharacteristic(this.hap.Characteristic.Active).value;
-				const target_active = status.off ? 0 : 1
+				const target_active = status.off ? this.hap.Characteristic.Active.INACTIVE : this.hap.Characteristic.Active.ACTIVE
 
 				if (active != target_active) {
 					if (this.verboseLog)
 						this.log.info("Poll: change active to: " + target_active)
 					service.updateCharacteristic(this.hap.Characteristic.Active, target_active)
-					if (target_active == 1) {
+					if (target_active == this.hap.Characteristic.Active.ACTIVE) {
 						if (this.verboseLog)
 							this.log.info("Poll: change activity to: " + status.current_activity.id)
 						service.updateCharacteristic(this.hap.Characteristic.ActiveIdentifier, status.current_activity.id);
@@ -212,23 +186,41 @@ export class AnekolHarmonyHubHelper {
 				if (this.verboseLog)
 					this.log.info("Poll: state change in progress - no update")
 			}
-		});
+		}, POLL_INTERVAL, slug, service);
 	}
 
 	// power off
-	private power_off(hub_slug: string) {
-		const command = hub_slug + "/off"
+	private power_off(hub: Hub) {
+		// main hub
+		const command = hub.slug + "/off"
 		if (this.verboseLog)
 			this.log.info("power_off: command: " + command)
 		this.harmony_api.put(command)
+
+		// devices
+		for (const d of hub.power_off) {
+			const command = hub.slug + "/devices/" + d + "/commands/power-off"
+			if (this.verboseLog)
+				this.log.info("power_off: command: " + command)
+			this.harmony_api.post(command)
+		}
 	}
 
 	// power on
-	private power_on(hub_slug: string, activity: CharacteristicValue) {
-		const command = hub_slug + "/activities/" + activity
+	private power_on(hub: Hub, activity: CharacteristicValue) {
+		//main hub
+		const command = hub.slug + "/activities/" + activity
 		if (this.verboseLog)
 			this.log.info("power_on: command: " + command)
 		this.harmony_api.post(command)
+
+		// devices
+		for (const d of hub.power_on) {
+			const command = hub.slug + "/devices/" + d + "/commands/power-on"
+			if (this.verboseLog)
+				this.log.info("power_on: command: " + command)
+			this.harmony_api.post(command)
+		}
 	}
 
 	// status
@@ -237,7 +229,7 @@ export class AnekolHarmonyHubHelper {
 		if (data) {
 			return { off: data.off, current_activity: data.current_activity }
 		} else {
-			return { off: true, current_activity: -1 }
+			return { off: true, current_activity: 0 }
 		}
 	}
 }

@@ -5,12 +5,14 @@ export class AnekolHarmonyApi {
     private readonly host: string
     private readonly log: Logger
     private readonly port: string
+    private readonly verboseLog: boolean
     private axios = require('axios')
 
-    constructor(log: Logger, host: string, port: string) {
+    constructor(log: Logger, host: string, port: string, verboseLog: boolean) {
         this.log = log
         this.host = host;
         this.port = port;
+        this.verboseLog = verboseLog
     }
 
     // get
@@ -39,7 +41,8 @@ export class AnekolHarmonyApi {
     private async _axios(method: string, suffix: string) {
         const url: string = 'http://' + this.host + ":" + this.port + "/hubs/" + suffix
         try {
-            this.log.debug("Axios: method: " + method + " url: " + url)
+            if (this.verboseLog)
+                this.log.info("Axios: method: " + method + " url: " + url)
             const resp = await this.axios({ method: method, url: url });
             return resp.data
         } catch (error) {

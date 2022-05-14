@@ -2,7 +2,7 @@
   "name": "homebridge-anekol-harmony-hub",
   "description": "Homebridge Anekol Harmony Hub",
   "version": "0.0.1",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "engines": {
     "node": ">=10.17.0",
     "homebridge": ">=1.0.0"
@@ -13,7 +13,6 @@
     "prepare": "npm run lint && rimraf ./dist && tsc",
     "prepublishOnly": "npm run prepare"
   },
-  "types": "index.d.ts",
   "keywords": [
     "homebridge-plugin"
   ],
@@ -25,8 +24,6 @@
     "axios": "^0.27.2",
     "eslint": "^8.15.0",
     "homebridge": "^1.3.9",
-    "nodemon": "^2.0.16",
-    "polling-to-event": ">=2.1.0",
     "rimraf": "^3.0.2",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.4"
