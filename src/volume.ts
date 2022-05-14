@@ -1,9 +1,7 @@
 // class to provide a Harmony Hub volume accessory helper
-
 import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, HAPStatus, Logger, PlatformAccessory, Service } from "homebridge";
 import { AnekolHarmonyApi } from "./harmony_api"
 import { AnekolHarmonyHub, Hub } from "./index"
-
 
 const VOLUME_COMMAND_REPEAT_FACTOR = 5
 const VOLUME_TURNOFF_DELAY = 30000 // 30sec
@@ -30,7 +28,6 @@ export class AnekolHarmonyHubVolumeHelper {
 			accessory.addService(this.hap.Service.AccessoryInformation)
 				.setCharacteristic(this.hap.Characteristic.Manufacturer, 'Anekol')
 				.setCharacteristic(this.hap.Characteristic.Model, 'HarmonyHub')
-
 
 		// configure the lightbulb/volume service
 		const service = this.accessory.getService(this.hap.Service.Lightbulb) ||
@@ -105,7 +102,6 @@ export class AnekolHarmonyHubVolumeHelper {
 			if (0 < repeat) {
 				this.harmony_api.post(hub_slug + "/commands/" + command, repeat)
 			}
-
 
 			// update to default volume
 			setTimeout((service) => {

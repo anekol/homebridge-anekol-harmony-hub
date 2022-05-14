@@ -1,5 +1,4 @@
 // class to provide a Logitech Harmony Hub platform
-
 import { API, DynamicPlatformPlugin, HAP, Logger, PlatformAccessory, PlatformConfig } from "homebridge";
 import { AnekolHarmonyApi } from './harmony_api';
 import { AnekolHarmonyHubDevicesHelper } from './devices';

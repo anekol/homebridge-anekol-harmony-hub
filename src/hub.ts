@@ -1,5 +1,4 @@
 // class to provide a Harmony Hub accessory helper
-
 import { CharacteristicGetCallback, CharacteristicSetCallback, CharacteristicValue, HAP, HAPStatus, Logger, PlatformAccessory, Service } from "homebridge";
 import { AnekolHarmonyApi } from "./harmony_api";
 import { AnekolHarmonyHub, Hub } from "./index"
