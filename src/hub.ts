@@ -167,18 +167,19 @@ export class AnekolHarmonyHubHelper {
 				const status = await this.status(slug)
 				if (this.verboseLog)
 					this.log.info("Poll: status: " + JSON.stringify(status))
+				if (status) {
+					const active = service.getCharacteristic(this.hap.Characteristic.Active).value;
+					const target_active = status.off ? this.hap.Characteristic.Active.INACTIVE : this.hap.Characteristic.Active.ACTIVE
 
-				const active = service.getCharacteristic(this.hap.Characteristic.Active).value;
-				const target_active = status.off ? this.hap.Characteristic.Active.INACTIVE : this.hap.Characteristic.Active.ACTIVE
-
-				if (active != target_active) {
-					if (this.verboseLog)
-						this.log.info("Poll: change active to: " + target_active)
-					service.updateCharacteristic(this.hap.Characteristic.Active, target_active)
-					if (target_active == this.hap.Characteristic.Active.ACTIVE) {
+					if (active != target_active) {
 						if (this.verboseLog)
-							this.log.info("Poll: change activity to: " + status.current_activity.id)
-						service.updateCharacteristic(this.hap.Characteristic.ActiveIdentifier, status.current_activity.id);
+							this.log.info("Poll: change active to: " + target_active)
+						service.updateCharacteristic(this.hap.Characteristic.Active, target_active)
+						if (target_active == this.hap.Characteristic.Active.ACTIVE) {
+							if (this.verboseLog)
+								this.log.info("Poll: change activity to: " + status.current_activity.id)
+							service.updateCharacteristic(this.hap.Characteristic.ActiveIdentifier, status.current_activity.id);
+						}
 					}
 				}
 			} else {
