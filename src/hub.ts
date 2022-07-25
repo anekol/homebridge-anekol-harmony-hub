@@ -4,7 +4,7 @@ import { AnekolHarmonyApi } from "./harmony_api";
 import { AnekolHarmonyHub, Hub } from "./index"
 
 const POLL_INTERVAL = 5000
-const STATE_CHANGE_SETTLE_TIME_INTERVAL = 10000
+const STATE_CHANGE_SETTLE_TIME_INTERVAL = 15000
 
 export class AnekolHarmonyHubHelper {
 	private hap: HAP
@@ -198,12 +198,15 @@ export class AnekolHarmonyHubHelper {
 		this.harmony_api.put(command)
 
 		// devices
-		for (const d of hub.power_off) {
-			const command = hub.slug + "/devices/" + d + "/commands/power-off"
-			if (this.verboseLog)
-				this.log.info("power_off: command: " + command)
-			this.harmony_api.post(command)
-		}
+		// wait for hub command to settle
+		setTimeout(() => {
+			for (const d of hub.power_off) {
+				const command = hub.slug + "/devices/" + d + "/commands/power-off"
+				if (this.verboseLog)
+					this.log.info("power_off: command: " + command)
+				this.harmony_api.post(command)
+			}
+		}, 10000);
 	}
 
 	// power on
@@ -215,12 +218,16 @@ export class AnekolHarmonyHubHelper {
 		this.harmony_api.post(command)
 
 		// devices
-		for (const d of hub.power_on) {
-			const command = hub.slug + "/devices/" + d + "/commands/power-on"
-			if (this.verboseLog)
-				this.log.info("power_on: command: " + command)
-			this.harmony_api.post(command)
-		}
+		// wait for hub command to settle
+		setTimeout(() => {
+			for (const d of hub.power_on) {
+				const command = hub.slug + "/devices/" + d + "/commands/power-on"
+				if (this.verboseLog)
+					this.log.info("power_on: command: " + command)
+				this.harmony_api.post(command)
+			}
+		}, 10000);
+
 	}
 
 	// status
