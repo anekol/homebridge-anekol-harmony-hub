@@ -31,7 +31,7 @@ export class AnekolHarmonyHubDevicesHelper {
 
 		// add device service if no config provided or if in config list
 		for (const device of this.hub.devices) {
-			if (this.config_devices == null || config_devices == [] ||
+			if (this.config_devices == null || config_devices.length == 0 ||
 				config_devices.find(config_device => device.label == config_device)) {
 
 				if (!hub.power_on.includes(device.slug) || !hub.power_off.includes(device.slug)) {
