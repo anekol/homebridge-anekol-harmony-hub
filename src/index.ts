@@ -38,7 +38,7 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
     this.host = config.host as string || "localhost"
     this.port = config.port as string || "8282"
     this.verboseLog = config.verboseLog as boolean || false
-    this.hubs_config = config.hubs as HubConfig[];
+    this.hubs_config = config.hubs || [] as HubConfig[];
 
     this.harmony_api = new AnekolHarmonyApi(log, this.host, this.port, this.verboseLog)
 
