@@ -1,26 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
-    "module": "commonjs",
-    "lib": [
-      "ES2015",
-      "ES2016",
-      "ES2017",
-      "ES2018"
-    ],
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "rootDir": "src",
-    "outDir": "dist",
     "strict": true,
-    "esModuleInterop": true
+    "sourceMap": true,
+    "target": "es5",
+    "module": "commonjs",
+    "outDir": "dist",
   },
   "include": [
     "src",
     "index.d.ts"
-  ],
-  "exclude": [
-    "**/*.spec.ts"
   ]
 }
