@@ -61,7 +61,7 @@ export class AnekolHarmonyHub implements DynamicPlatformPlugin {
             uuid = this.hap.uuid.generate(PLUGIN_NAME + "_" + hub.slug + "_hub")
             accessory = this.find_restored(uuid)
             if (!accessory) {
-              accessory = new this.api.platformAccessory(hub_label, uuid, this.hap.Categories.TELEVISION);
+              accessory = new this.api.platformAccessory(hub_label, uuid, this.hap.Categories.TV_SET_TOP_BOX);
               this.api.publishExternalAccessories(PLUGIN_NAME, [accessory]);
               this.log.info('Added new accessory: ' + accessory.displayName);
             } else {
