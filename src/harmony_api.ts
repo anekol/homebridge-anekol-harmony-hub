@@ -40,17 +40,25 @@ export class AnekolHarmonyApi {
 
     // harmony_api.ts
     private async _axios(method: string, suffix: string) {
-        const url: string = 'http://' + this.host + ":" + this.port + "/hubs/" + suffix
+        const url: string = 'http://' + this.host + ":" + this.port + "/hubs/" + suffix;
 
         try {
-            if (this.verboseLog)
-                this.log.info("Axios: method: " + method + " url: " + url)
+            if (this.verboseLog) {
+                this.log.info(`Axios: method: ${method} url: ${url}`);
+            }
 
-            const resp = await this.axios({ method: method, url: url });
-            return resp.data;                // e.g. { off: ..., current_activity: ... }
+            const resp = await this.axios({ method, url });
+            return resp.data; // e.g. { off, current_activity, ... }
         } catch (error: any) {
             const status = error?.response?.status;
-            this.log.error(`HarmonyApi url: ${url} : ${error} (status=${status})`);
+            const body = error?.response?.data;
+
+            this.log.error(
+                `HarmonyApi url: ${url} : ${error} (status=${status})` +
+                (body ? ` body=${JSON.stringify(body)}` : "")
+            );
+
+            // clear signal that there is NO data
             return null;
         }
     }
