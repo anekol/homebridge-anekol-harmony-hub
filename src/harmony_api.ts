@@ -49,12 +49,13 @@ export class AnekolHarmonyApi {
 
             const resp = await this.axios({ method, url });
             return resp.data; // e.g. { off, current_activity, ... }
-        } catch (error: any) {
-            const status = error?.response?.status;
-            const body = error?.response?.data;
+        } catch (error: unknown) {
+            const err = error as { response?: { status?: number; data?: unknown } };
+            const status = err?.response?.status;
+            const body = err?.response?.data;
 
             this.log.error(
-                `HarmonyApi url: ${url} : ${error} (status=${status})` +
+                `HarmonyApi url: ${url} : ${String(error)} (status=${status})` +
                 (body ? ` body=${JSON.stringify(body)}` : "")
             );
 
