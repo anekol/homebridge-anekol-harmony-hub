@@ -11,7 +11,6 @@
   "main": "dist/index.js",
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=0",
-    "prepare": "npm run lint && tsc --build --clean && tsc",
     "prepublishOnly": "npm run prepare"
   },
   "keywords": [
